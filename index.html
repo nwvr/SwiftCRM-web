@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" sizes="32x32" href="Assets/icon-32.png">
+  <link rel="apple-touch-icon" href="Assets/icon-180.png">
+  <title>SwiftCRM</title>
+  <style>
+    :root { --paper:#fff; --chrome:#f3f4f6; --panel:#f9f9fb; --hairline:#d1d5da; --ink:#1d1d1f; --muted:#6e6e73;
+      --accent:#0a64d8; --accent-soft:rgba(10,100,216,.10); --danger:#c62828; --row:#f5f7fb; }
+    @media (prefers-color-scheme: dark) { :root { --paper:#1e1e1e; --chrome:#2a2a2c; --panel:#252527; --hairline:#3a3a3c;
+      --ink:#f5f5f7; --muted:#a1a1a6; --accent:#3b8cff; --accent-soft:rgba(59,140,255,.16); --danger:#ff6b6b; --row:#262628; } }
+    * { box-sizing: border-box; }
+    html, body { margin:0; height:100%; background:var(--paper); color:var(--ink);
+      font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    #status { padding:40px; text-align:center; color:var(--muted); font-size:14px; }
+    .app { display:grid; grid-template-columns:200px 1fr; grid-template-rows:auto 1fr; height:100%; }
+    .toolbar { grid-column:1/3; display:flex; align-items:center; gap:6px; padding:8px 12px; background:var(--chrome);
+      border-bottom:1px solid var(--hairline); flex-wrap:wrap; }
+    .toolbar .title { font-weight:600; font-size:14px; margin-right:10px; }
+    .toolbar .spacer { flex:1; }
+    button { font:inherit; padding:5px 11px; border-radius:6px; border:1px solid var(--hairline); background:var(--paper); color:var(--ink); cursor:pointer; }
+    button:hover { border-color:var(--accent); }
+    button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+    button.danger { color:var(--danger); }
+    button:disabled { opacity:.5; cursor:default; }
+    .sidebar { background:var(--panel); border-right:1px solid var(--hairline); padding:8px 0; }
+    .sidebar .item { padding:6px 14px; cursor:pointer; border-radius:6px; margin:0 6px; }
+    .sidebar .item:hover { background:var(--accent-soft); }
+    .sidebar .item.on { background:var(--accent); color:#fff; }
+    .main { overflow:auto; min-width:0; padding:16px 20px; }
+    h1 { font-size:22px; margin:0 0 12px; }
+    h2 { font-size:15px; margin:20px 0 8px; }
+    table { border-collapse:collapse; width:100%; }
+    th { text-align:left; font-weight:600; color:var(--muted); border-bottom:1px solid var(--hairline); padding:6px 8px; white-space:nowrap; }
+    td { padding:6px 8px; border-bottom:1px solid var(--hairline); vertical-align:top; }
+    tr.click:hover td { background:var(--row); cursor:pointer; }
+    td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .tiles { display:flex; gap:12px; flex-wrap:wrap; }
+    .tile { background:var(--chrome); border-radius:10px; padding:12px 16px; min-width:150px; }
+    .tile .label { color:var(--muted); font-size:11px; }
+    .tile .value { font-size:20px; font-weight:700; font-variant-numeric:tabular-nums; }
+    input, select, textarea { font:inherit; padding:4px 6px; border:1px solid var(--hairline); border-radius:5px; background:var(--paper); color:var(--ink); }
+    input[type=search] { width:220px; }
+    .modal { position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; }
+    .dialog { background:var(--paper); border-radius:10px; padding:18px; width:min(460px,94vw); max-height:92vh; overflow:auto; box-shadow:0 10px 40px rgba(0,0,0,.3); }
+    .dialog label { display:grid; grid-template-columns:130px 1fr; gap:8px; align-items:center; margin:6px 0; color:var(--muted); }
+    .dialog .buttons { display:flex; gap:8px; justify-content:flex-end; margin-top:14px; }
+    .muted { color:var(--muted); }
+    .warn { color:#b45309; } .ok { color:#15803d; } .bad { color:var(--danger); }
+    .banner { background:rgba(245,158,11,.18); padding:8px 12px; border-bottom:1px solid var(--hairline); }
+    .drop { border:2px dashed var(--hairline); border-radius:10px; padding:14px; text-align:center; color:var(--muted); }
+    .drop.over { border-color:var(--accent); color:var(--accent); }
+    .wide { width:min(900px,96vw); }
+    .section { border:1px solid var(--hairline); border-radius:10px; padding:10px 12px; margin:12px 0; }
+    .section h3 { margin:0 0 8px; font-size:14px; }
+    .grid2 { display:grid; grid-template-columns:130px 1fr 130px 1fr; gap:6px 10px; align-items:center; }
+    .grid2 label { display:contents; color:var(--muted); }
+    td input { width:100%; }
+    .rate { display:flex; gap:10px; align-items:center; padding:5px 0; cursor:pointer; }
+    .tabs { display:flex; gap:0; margin-bottom:10px; }
+    .tabs button { flex:1; padding:8px; border-radius:0; }
+    .tabs button:first-child { border-radius:8px 0 0 8px; } .tabs button:last-child { border-radius:0 8px 8px 0; }
+    .tabs button.active { background:var(--accent); color:#fff; }
+    table.lines textarea { width:100%; resize:vertical; font:inherit; }
+    .dialog.wide label { display:block; margin:0; }
+    .dialog.wide .row { display:grid; grid-template-columns:130px 1fr 130px 1fr; gap:6px 10px; align-items:center; margin:5px 0; color:var(--muted); }
+    .dialog.wide .row input, .dialog.wide .row select, .dialog.wide .row textarea { width:100%; }
+  </style>
+</head>
+<body>
+  <div id="status">Loading SwiftCRM…</div>
+  <div id="app"></div>
+  <script>
+    // Browser services the Swift app calls through JavaScriptKit. Everything stays on this computer:
+    // the library is kept in the browser's IndexedDB and can be saved/opened as a crm.db file.
+    window.CRM = {
+      _db: null,
+      openDB() {
+        if (this._db) return Promise.resolve(this._db);
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open("swiftcrm", 2);
+          req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains("libraries")) db.createObjectStore("libraries");
+            if (!db.objectStoreNames.contains("handles")) db.createObjectStore("handles");
+          };
+          req.onsuccess = () => { this._db = req.result; resolve(this._db); };
+          req.onerror = () => reject(req.error);
+        });
+      },
+      async idbGet(store, key) {
+        const db = await this.openDB();
+        return new Promise((resolve, reject) => { const r = db.transaction(store).objectStore(store).get(key); r.onsuccess = () => resolve(r.result ?? null); r.onerror = () => reject(r.error); });
+      },
+      async idbPut(store, key, value) {
+        const db = await this.openDB();
+        return new Promise((resolve, reject) => { const tx = db.transaction(store, "readwrite"); tx.objectStore(store).put(value, key); tx.oncomplete = () => resolve(true); tx.onerror = () => reject(tx.error); });
+      },
+      async load() { const r = await this.idbGet("libraries", "crm.db"); return r ? new Uint8Array(r) : null; },
+      async save(bytes) { return this.idbPut("libraries", "crm.db", bytes.slice().buffer); },
+
+      // --- The shared "Proposals" folder (Chrome, Edge): read anywhere in it, write only inside SwiftCRM/ ---------
+      folder: null,
+      hasFolderAPI() { return typeof window.showDirectoryPicker === "function"; },
+      async chooseFolder() {
+        const h = await showDirectoryPicker({ mode: "readwrite" });
+        this.folder = h; await this.idbPut("handles", "proposals", h); return h.name;
+      },
+      // "granted", "prompt" (needs a click: reconnectFolder) or "none".
+      async restoreFolder() {
+        try {
+          const h = await this.idbGet("handles", "proposals");
+          if (!h) return "none";
+          this.folder = h;
+          return await h.queryPermission({ mode: "readwrite" });
+        } catch (e) { return "none"; }
+      },
+      async reconnectFolder() { return (await this.folder.requestPermission({ mode: "readwrite" })); },
+      folderName() { return this.folder ? this.folder.name : ""; },
+      async dirHandle(parts, create) {
+        let d = this.folder;
+        for (const p of parts) d = await d.getDirectoryHandle(p, { create });
+        return d;
+      },
+      // {bytes, modified} or null.
+      async read(parts) {
+        try {
+          const dir = await this.dirHandle(parts.slice(0, -1), false);
+          const f = await (await dir.getFileHandle(parts[parts.length - 1])).getFile();
+          return { bytes: new Uint8Array(await f.arrayBuffer()), modified: f.lastModified };
+        } catch (e) { return null; }
+      },
+      async modified(parts) {
+        try {
+          const dir = await this.dirHandle(parts.slice(0, -1), false);
+          return (await (await dir.getFileHandle(parts[parts.length - 1])).getFile()).lastModified;
+        } catch (e) { return 0; }
+      },
+      async list(parts) {
+        try { const out = []; for await (const [name] of (await this.dirHandle(parts, false)).entries()) out.push(name); return JSON.stringify(out); }
+        catch (e) { return "[]"; }
+      },
+      // Existing files are only read: writing is limited to the SwiftCRM folder.
+      async write(parts, bytes) {
+        if (parts[0] !== "SwiftCRM") throw new Error("SwiftCRM only writes inside its own folder");
+        const dir = await this.dirHandle(parts.slice(0, -1), true);
+        const w = await (await dir.getFileHandle(parts[parts.length - 1], { create: true })).createWritable();
+        await w.write(bytes); await w.close();
+        return true;
+      },
+      async exists(parts) { return (await this.read(parts)) !== null; },
+
+      download(data, name, mime) {
+        const url = URL.createObjectURL(new Blob([data], { type: mime }));
+        const a = Object.assign(document.createElement("a"), { href: url, download: name });
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      },
+      // Shows a PDF over the page (nothing is saved).
+      preview(data) {
+        document.getElementById("previewOverlay")?.remove();
+        const url = URL.createObjectURL(new Blob([data], { type: "application/pdf" }));
+        const box = Object.assign(document.createElement("div"), { id: "previewOverlay" });
+        box.style.cssText = "position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;flex-direction:column;align-items:center;padding:16px";
+        const bar = document.createElement("div");
+        bar.style.cssText = "background:var(--paper);padding:8px 14px;border-radius:8px 8px 0 0;width:min(820px,96vw);display:flex;justify-content:space-between;align-items:center";
+        bar.innerHTML = "<b>Preview: nothing is saved or written</b>";
+        const close = Object.assign(document.createElement("button"), { textContent: "Close" });
+        close.onclick = () => { box.remove(); URL.revokeObjectURL(url); };
+        bar.appendChild(close);
+        const frame = Object.assign(document.createElement("iframe"), { src: url });
+        frame.style.cssText = "flex:1;width:min(820px,96vw);border:0;background:#fff;border-radius:0 0 8px 8px";
+        box.append(bar, frame);
+        document.body.appendChild(box);
+      },
+      pick(accept) {
+        return new Promise((resolve) => {
+          const input = Object.assign(document.createElement("input"), { type: "file", accept });
+          input.onchange = async () => { const f = input.files[0]; resolve(f ? { name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) } : null); };
+          input.oncancel = () => resolve(null);
+          input.click();
+        });
+      },
+      today() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); },
+      // The name shown to colleagues when two edits collide; asked once, remembered in this browser.
+      userName() {
+        let name = "";
+        try { name = localStorage.getItem("swiftcrm.user") || ""; } catch (e) {}
+        if (!name) {
+          try { name = (window.prompt("Your name (shown to colleagues if your edit collides with theirs):") || "").trim(); } catch (e) {}
+          if (name) { try { localStorage.setItem("swiftcrm.user", name); } catch (e) {} }
+        }
+        return name || "web";
+      },
+
+      // --- Vendor quotes: PDF text with positions (pdf.js) -> lines for the Swift parser ---------------------------
+      pending: null,
+      async loadPdfJs() {
+        if (window.pdfjsLib) return window.pdfjsLib;
+        await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"; s.onload = res; s.onerror = () => rej(new Error("could not load pdf.js")); document.head.appendChild(s); });
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        return window.pdfjsLib;
+      },
+      async pdfLines(bytes) {
+        const lib = await this.loadPdfJs();
+        const doc = await lib.getDocument({ data: bytes.slice() }).promise;
+        const lines = [];
+        for (let p = 1; p <= doc.numPages; p++) {
+          const content = await (await doc.getPage(p)).getTextContent();
+          for (const i of content.items) {
+            if (!i.str || !i.str.trim()) continue;
+            // Split an item into words so the Swift side lays out columns the same way on every platform.
+            const total = i.str.length || 1; let offset = 0;
+            for (const word of i.str.split(/(\s+)/)) {
+              if (word.trim()) lines.push({ text: word, x: i.transform[4] + i.width * offset / total, y: i.transform[5], w: i.width * word.length / total, page: p - 1 });
+              offset += word.length;
+            }
+          }
+        }
+        return JSON.stringify(lines);
+      },
+      // A vendor file was chosen or dropped: read it, then tell Swift.
+      async vendorFile(file) {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const isPDF = file.name.toLowerCase().endsWith(".pdf");
+        this.pending = { name: file.name, bytes, lines: isPDF ? await this.pdfLines(bytes) : null, pdf: isPDF };
+        if (this.handler) this.handler("vendor", file.name);
+      },
+      handler: null,
+      form() {
+        const out = {};
+        document.querySelectorAll(".dialog [data-field]").forEach((el) => { out[el.dataset.field] = el.type === "checkbox" ? (el.checked ? "1" : "0") : el.value; });
+        return JSON.stringify(out);
+      },
+    };
+    document.addEventListener("change", (e) => {
+      if (e.target.closest(".dialog") && e.target.dataset.field && !e.target.dataset.norecalc && CRM.handler) CRM.handler("recalc", "");
+      if (e.target.id === "vendorInput" && e.target.files[0]) CRM.vendorFile(e.target.files[0]);
+    });
+    document.addEventListener("dragover", (e) => { const z = e.target.closest(".drop"); if (z) { e.preventDefault(); z.classList.add("over"); } });
+    document.addEventListener("dragleave", (e) => { const z = e.target.closest(".drop"); if (z) z.classList.remove("over"); });
+    document.addEventListener("drop", (e) => { const z = e.target.closest(".drop"); if (z) { e.preventDefault(); z.classList.remove("over"); if (e.dataTransfer.files[0]) CRM.vendorFile(e.dataTransfer.files[0]); } });
+    document.addEventListener("click", (e) => {
+      const el = e.target.closest("[data-act]");
+      if (el && CRM.handler) CRM.handler(el.dataset.act, el.dataset.arg || "");
+    });
+    document.addEventListener("input", (e) => {
+      if (e.target.id === "search" && CRM.handler) CRM.handler("search", e.target.value);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") { const o = document.getElementById("previewOverlay"); if (o) { o.querySelector("button").click(); return; } if (CRM.handler) CRM.handler("cancel", ""); }
+    });
+  </script>
+  <script type="module">
+    const status = document.getElementById("status");
+    try {
+      const candidates = [new URL("./Package/", import.meta.url), new URL("./.build/plugins/PackageToJS/outputs/Package/", import.meta.url)];
+      let pkg = candidates[0];
+      for (const candidate of candidates) {
+        try { const probe = await fetch(new URL("index.js", candidate), { cache: "no-cache" }); if (probe.ok) { pkg = candidate; break; } } catch (_) {}
+      }
+      const { init } = await import(new URL("index.js", pkg).href);
+      await init({ module: fetch(new URL("WebClientApp.wasm", pkg), { cache: "no-cache" }) });
+      status?.remove();
+    } catch (error) {
+      if (status) status.textContent = "Failed to start SwiftCRM: " + error;
+      console.error(error);
+    }
+  </script>
+</body>
+</html>
